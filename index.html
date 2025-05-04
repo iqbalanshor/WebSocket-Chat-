@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Chat</title>
+    <style>
+      /* Styling untuk chat */
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      .chat-container {
+        width: 100%;
+        max-width: 600px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        height: 80vh;
+      }
+      #messages {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-bottom: 20px;
+        padding: 10px;
+        background-color: #fafafa;
+        border-radius: 8px;
+        max-height: 400px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      #messages p {
+        margin: 8px 0;
+        padding: 8px;
+        background-color: #e0f7fa;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 90%;
+        word-wrap: break-word;
+      }
+      input[type="text"] {
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        margin-right: 10px;
+        flex-grow: 1;
+        transition: border-color 0.3s;
+      }
+      input[type="text"]:focus {
+        border-color: #00796b;
+        outline: none;
+      }
+      button {
+        background-color: #00796b;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #004d40;
+      }
+      .input-container {
+        display: flex;
+        margin-top: 10px;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <h1 style="text-align: center; color: #00796b">Chat Real-Time</h1>
+      <div id="messages"></div>
+      <div class="input-container">
+        <input type="text" id="message" placeholder="Type a message" />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+
+    <script>
+      const socket = new WebSocket("ws://localhost:3000");
+
+      // Balasan server yang sesuai dengan pesan yang diterima
+      const serverReplies = {
+        halo: "Halo!",
+        "tolong subscribe channel saya": "Baik, apa nama channelnya?.",
+        "Anshor Official": "Baik, saya akan subscribe channel anda",
+        "terima kasih": "Sama-sama! Senang bisa membantu.",
+      };
+
+      // Menerima pesan dari server
+      socket.onmessage = function (event) {
+        const messagesDiv = document.getElementById("messages");
+        const message = document.createElement("p");
+        message.textContent = event.data;
+        messagesDiv.appendChild(message);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto scroll ke bawah
+      };
+
+      // Mengirim pesan ke server dan menampilkan pesan di layar
+      function sendMessage() {
+        const messageInput = document.getElementById("message");
+        const messageText = messageInput.value.trim();
+
+        if (messageText !== "") {
+          // Tampilkan pesan dari pengguna di layar
+          const messagesDiv = document.getElementById("messages");
+          const message = document.createElement("p");
+          message.textContent = `You: ${messageText}`;
+          messagesDiv.appendChild(message);
+
+          // Scroll ke bawah setelah menambahkan pesan baru
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+          // Kirim pesan ke server
+          socket.send(messageText);
+
+          // Mengosongkan kolom input
+          messageInput.value = "";
+
+          // Tampilkan balasan dari server berdasarkan pesan yang dikirim
+          setTimeout(function () {
+            const serverMessage = document.createElement("p");
+            // Jika ada balasan yang sesuai di dalam serverReplies, tampilkan balasan tersebut
+            serverMessage.textContent = `Server: ${
+              serverReplies[messageText] || "Pesan tidak dikenali."
+            }`;
+            messagesDiv.appendChild(serverMessage);
+
+            // Scroll ke bawah setelah menambahkan pesan balasan
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+          }, 1000); // 1 detik delay sebelum balasan muncul
+        }
+      }
+    </script>
+  </body>
+</html>
